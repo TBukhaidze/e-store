@@ -22,6 +22,7 @@ const SingleProduct = () => {
     if (!isFetching && !isLoading && !isSuccess) {
       navigate(ROUTES.HOME);
     }
+    // eslint-disable-next-line
   }, [isLoading, isFetching, isSuccess]);
 
   useEffect(() => {

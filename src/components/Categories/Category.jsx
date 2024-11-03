@@ -39,6 +39,7 @@ const Category = () => {
     setItems([]);
     setEnd(false);
     setParams({ ...defaultParams, categoryId: id });
+    // eslint-disable-next-line
   }, [id]);
 
   useEffect(() => {
