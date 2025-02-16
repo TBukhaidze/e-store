@@ -97,7 +97,7 @@ const Category = () => {
             name="price_min"
             onChange={handleChange}
             placeholder="0"
-            value={values.price_min}
+            // value={values.price_min}
           />
           <span>Price from</span>
         </div>
@@ -108,7 +108,7 @@ const Category = () => {
             name="price_max"
             onChange={handleChange}
             placeholder="0"
-            value={values.price_max}
+            // value={values.price_max}
           />
           <span>Price to</span>
         </div>
