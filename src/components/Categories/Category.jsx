@@ -1,84 +1,81 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
-
 import { useGetProductsQuery } from "../../features/api/apiSlice";
-
 import styles from "../../styles/Category.module.css";
 import Products from "../Products/Products";
 import { useSelector } from "react-redux";
 
+const defaultValues = {
+  title: "",
+  price_min: 0,
+  price_max: 0,
+};
+
 const Category = () => {
   const { id } = useParams();
   const { list } = useSelector(({ categories }) => categories);
-
-  const defaultValues = {
-    title: "",
-    price_min: 0,
-    price_max: 0,
-  };
-
-  const defaultParams = {
+  const [isEnd, setEnd] = useState(false);
+  const [items, setItems] = useState([]);
+  const [values, setValues] = useState(defaultValues);
+  const [params, setParams] = useState({
     categoryId: id,
     limit: 5,
     offset: 0,
     ...defaultValues,
-  };
-
-  const [isEnd, setEnd] = useState(false);
-  const [cat, setCat] = useState("");
-  const [items, setItems] = useState("");
-  const [values, setValues] = useState(defaultValues);
-  const [params, setParams] = useState(defaultParams);
+  });
 
   const { data = [], isLoading, isSuccess } = useGetProductsQuery(params);
 
-  useEffect(() => {
-    if (!id) return;
+  const categoryName = list.find((item) => item.id === Number(id))?.name || "";
 
+  const handleChange = useCallback(({ target: { value, name } }) => {
+    setValues((prev) => ({ ...prev, [name]: value }));
+  }, []);
+
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      setItems([]);
+      setEnd(false);
+      setParams((prev) => ({ ...prev, ...values, offset: 0 }));
+    },
+    [values]
+  );
+
+  const handleReset = useCallback(() => {
     setValues(defaultValues);
-    setItems([]);
+    setParams((prev) => ({ ...prev, ...defaultValues, offset: 0 }));
     setEnd(false);
-    setParams({ ...defaultParams, categoryId: id });
-    // eslint-disable-next-line
-  }, [id]);
+  }, []);
+
+  const loadMore = useCallback(() => {
+    setParams((prev) => ({ ...prev, offset: prev.offset + prev.limit }));
+  }, []);
 
   useEffect(() => {
-    if (isLoading) return;
-
-    if (!data.length) return setEnd(true);
-
-    setItems((_items) => [..._items, ...data]);
+    if (!isLoading && data.length === 0) {
+      setEnd(true);
+    } else if (!isLoading) {
+      setItems((prev) => [...prev, ...data]);
+    }
   }, [data, isLoading]);
 
   useEffect(() => {
-    if (!id || !list.length) return;
-
-    const { name } = list.find((item) => item.id === id * 1);
-
-    setCat(name);
-  }, [list, id]);
-
-  const handleChange = ({ target: { value, name } }) => {
-    setValues({ ...values, [name]: value });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+    if (!id) return;
+    setValues(defaultValues);
     setItems([]);
     setEnd(false);
-    setParams({ ...defaultParams, ...values });
-  };
-
-  const handleReset = () => {
-    setValues(defaultValues);
-    setParams(defaultParams);
-    setEnd(false);
-  };
+    setParams((prev) => ({
+      ...prev,
+      categoryId: id,
+      offset: 0,
+      ...defaultValues,
+    }));
+  }, [id]);
 
   return (
     <section className={styles.wrapper}>
-      <h2 className={styles.title}>{cat}</h2>
+      <h2 className={styles.title}>{categoryName}</h2>
 
       <form className={styles.filters} onSubmit={handleSubmit}>
         <div className={styles.filter}>
@@ -97,7 +94,7 @@ const Category = () => {
             name="price_min"
             onChange={handleChange}
             placeholder="0"
-            // value={values.price_min}
+            value={values.price_min || ""}
           />
           <span>Price from</span>
         </div>
@@ -108,7 +105,7 @@ const Category = () => {
             name="price_max"
             onChange={handleChange}
             placeholder="0"
-            // value={values.price_max}
+            value={values.price_max || ""}
           />
           <span>Price to</span>
         </div>
@@ -134,13 +131,7 @@ const Category = () => {
 
       {!isEnd && (
         <div className={styles.more}>
-          <button
-            onClick={() =>
-              setParams({ ...params, offset: params.offset + params.limit })
-            }
-          >
-            See more
-          </button>
+          <button onClick={loadMore}>See more</button>
         </div>
       )}
     </section>
